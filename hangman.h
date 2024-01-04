@@ -151,7 +151,7 @@ void my_putstr(char *str)
 
 int blank(char src)
 {
-    if(src == '\n' || src == '\t' || src == '\v' || src == '\f' || src == '\r' || src == ' ' || src == '\0' || src == ',')
+    if(src == '\n' || src == '\t' || src == '\v' || src == '\f' || src == '\r' || src == '\0' || src == ',')
     {
         return 1;
     }

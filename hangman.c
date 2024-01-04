@@ -63,15 +63,15 @@ void vider_buffer(void)
 
 char *chooseWord(char **strArray)
 {
+    int startIndex = 0;
     srand(time(NULL));
 
     char *found = malloc(sizeof(char*) * length(*strArray));
 
-    int random =  (rand() / (4 - 1 + 1)) +1 ;
+    int random =  startIndex + (rand() % ((sizeof strArray - 1) - startIndex));
 
-    int randomness= rand() / random;
 
-    strcpy(found, strArray[randomness]);
+    strcpy(found, strArray[random]);
 
     char **splitted = split(found);
 
@@ -92,8 +92,11 @@ int replay(void(*hangman)(char *dictionnary ,char *difficulty), char *dictionnar
         if (buffer == 'Y') {
             printf("Choose between: facile, moyen, difficile\n");
             scanf("%s", difficulty);
+            vider_buffer();
+            gameStatus = 0;
             hangman(dictionnary, difficulty);
         } else if(buffer == 'N'){
+            gameStatus = 0;
             hangman(dictionnary, difficulty);
         }else {
             printf("Please choose the appropriate letter next time\n");
@@ -114,11 +117,17 @@ char *wordTransformed(char *stringTochange, char *emptyString)
     int i = 0;
     while(i < length(stringTochange))
     {
-        if(emptyString[i] == '-')
-        {
-            emptyString[i] = '-';
-            i++;
+        switch (stringTochange[i]) {
+            case '-':
+                emptyString[i] = '-';
+                i++;
+                break;
+            case ' ':
+                emptyString[i] = ' ';
+                i++;
+                break;
         }
+
         emptyString[i] = '*';
         i++;
     }
@@ -146,12 +155,14 @@ void hangman(char *dictionnary, char *difficulty)
     int index = 0;
     int fail = 0;
     int gameWon = 0;
+    int firstTurn = 0;
 
     char **stringsFound = openAndReadCsv(difficulty, dictionnary);
 
     char *wordToGuess = chooseWord(stringsFound);
 
     char *wordToFind = malloc( sizeof(char) * length(wordToGuess));
+
 
     wordToFind = wordTransformed(wordToGuess, wordToFind);
 
@@ -161,15 +172,28 @@ void hangman(char *dictionnary, char *difficulty)
 
         while(wordToFind[index] != '\0')
         {
+            if(wordToFind[index] == ' ' || wordToFind[index] == '-')
+            {
+                if(firstTurn == 0)
+                {
+                    gameWon++;
+                }
+            }
+            if(wordToFind[index] == buffer)
+            {
+                gameWon--;
+            }
             if(buffer == wordToGuess[index])
             {
                 wordToFind[index] = buffer;
+
                 gameWon++;
                 fail++;
             }
 
             index++;
         }
+
         if(fail == 0)
         {
             life--;
@@ -187,6 +211,8 @@ void hangman(char *dictionnary, char *difficulty)
             printf("Ho no you lost your word was %s\n", wordToGuess);
             gameStatus = replay(hangman, dictionnary, difficulty, gameStatus);
         }
+        firstTurn++;
+
     }
 }
 
