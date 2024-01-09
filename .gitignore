@@ -1,3 +1,6 @@
 core.55441
 .vscode
 build/
+hangman
+hangman.o
+hangman.exe

@@ -6,51 +6,150 @@
 #include <string.h>
 #include "hangman.h"
 #include <time.h>
-#define MAXCHAR 100
 
-
-
-char **openAndReadCsv(char *difficulty, char *fileName)
+char **openAndReadCsv(char *difficulty, char *fileName, char *category)
 {
+    int rowCount = 0;
+
+    if(fileName == NULL)
+    {
+        fileName = "dictionnary.csv";
+    }
     FILE *inputFile = fopen(fileName, "r");
-
-
     if(inputFile == NULL)
     {
-        printf("Cannot open file %s",  fileName);
-        exit(-1);
+        printf("Cannot open file %s\n",  fileName);
+        exit(0);
     }
-    if(my_strcmp(difficulty, "facile") != 0 && my_strcmp(difficulty, "moyen") != 0 && my_strcmp(difficulty, "difficile") != 0)
-    {
-        printf("Utiliser une entrée valide: \"facile\", \"moyen\", \"difficile\"");
-    }
-
-
     char row[256];
     char **array = malloc(sizeof (char*));
     int i = 0;
-
-
     while(fgets(row, sizeof(row), inputFile) != NULL) {
+        rowCount++;
         if (strchr(row, '#') != NULL) {
             continue;
         }
-        if(strstr(row, difficulty) != NULL) {
+        if(category == NULL && difficulty == NULL)
+        {
             array = realloc(array, (i + 1) * sizeof(char *));
-
             array[i] = malloc(strlen(row) + 1);
-
             strcpy(array[i], row);
             i++;
         }
-        
+        if(difficulty != NULL)
+        {
+            if(strstr(row, "facile") == NULL && strstr(row, "moyen") == NULL && strstr(row, "difficile") == NULL) {
+                printf("Error on line %d: %s\n", rowCount, row);
+                printf("\n");
+            }
+            if(strstr(row, difficulty) != NULL) {
+
+                if(category != NULL)
+                {
+                    if(strstr(row, category) != NULL)
+                    {
+                        array = realloc(array, (i + 1) * sizeof(char *));
+                        array[i] = malloc(strlen(row) + 1);
+                        strcpy(array[i], row);
+                        i++;
+                    }
+                }
+                else{
+                    array = realloc(array, (i + 1) * sizeof(char *));
+                    array[i] = malloc(strlen(row) + 1);
+                    strcpy(array[i], row);
+                    i++;
+                }
+            }
+        }
     }
-    array[i+1] = NULL;
-
-    fclose(inputFile);
-
+    array[i] = NULL;
     return array;
 }
+
+void free_strings(char *string)
+{
+    free(string);
+}
+
+void free_array_strings(char **string)
+{
+    int arrayLength = sizeof(string);
+    int i = 0;
+
+    while(i < arrayLength)
+    {
+        free(string[i]);
+        i++;
+    }
+    free(string);
+}
+
+void printHangmanStand(int numLines)
+{
+    while(numLines > 0)
+    {
+        printf("|\n");
+        numLines --;
+    }
+}
+
+void print_hangman(int index)
+{
+    switch (index)
+    {
+        case 6:
+            printf("|\\___\n");
+            printHangmanStand(4);
+            break;
+
+        case 5:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printHangmanStand(3);
+            break;
+
+        case 4:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printf("|   |\n");
+            printHangmanStand(2);
+            break;
+
+        case 3:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printf("|  /| \n");
+            printHangmanStand(2);
+            break;
+
+        case 2:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printf("|  /|\\\n");
+            printHangmanStand(2);
+            break;
+
+        case 1:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printf("|  /|\\\n");
+            printf("|  /    \n");
+            printHangmanStand(1);
+            break;
+
+        case 0:
+            printf("|\\___\n");
+            printf("|   O\n");
+            printf("|  /|\\\n");
+            printf("|  / \\\n");
+            printHangmanStand(1);
+            break;
+        default:
+            printf("Error: switch case not met\n\n");
+    }
+}
+
 
 void vider_buffer(void)
 {
@@ -63,13 +162,18 @@ void vider_buffer(void)
 
 char *chooseWord(char **strArray)
 {
-    int startIndex = 0;
+
+    int i =0;
+    while(strArray[i] != 0)
+    {
+        i++;
+    }
+
     srand(time(NULL));
 
     char *found = malloc(sizeof(char*) * length(*strArray));
 
-    int random =  startIndex + (rand() % ((sizeof strArray - 1) - startIndex));
-
+    int random =   0 + rand()  / (RAND_MAX / ((i-1) -0 +1 ) + 1);
 
     strcpy(found, strArray[random]);
 
@@ -78,7 +182,7 @@ char *chooseWord(char **strArray)
     return splitted[0];
 }
 
-int replay(void(*hangman)(char *dictionnary ,char *difficulty), char *dictionnary, char *difficulty, int gameStatus)
+int replay(void(*hangman)(char *dictionnary ,char *difficulty, char *category), char *dictionnary, char *difficulty, char *category, int gameStatus)
 {
     char buffer;
 
@@ -94,10 +198,10 @@ int replay(void(*hangman)(char *dictionnary ,char *difficulty), char *dictionnar
             scanf("%s", difficulty);
             vider_buffer();
             gameStatus = 0;
-            hangman(dictionnary, difficulty);
+            hangman(dictionnary, difficulty, category);
         } else if(buffer == 'N'){
             gameStatus = 0;
-            hangman(dictionnary, difficulty);
+            hangman(dictionnary, difficulty, category);
         }else {
             printf("Please choose the appropriate letter next time\n");
             exit(0);
@@ -137,6 +241,7 @@ char *wordTransformed(char *stringTochange, char *emptyString)
 
 char askUser(int life, char *wordToFind, char buffer)
 {
+    print_hangman(life);
     printf("You have %d life\n", life);
     printf("Word to find : %s\n", wordToFind);
     printf("Please enter a letter: \n");
@@ -147,7 +252,7 @@ char askUser(int life, char *wordToFind, char buffer)
 }
 
 
-void hangman(char *dictionnary, char *difficulty)
+void hangman(char *dictionnary, char *difficulty, char *category)
 {
     int gameStatus = 1;
     int life = 6;
@@ -157,7 +262,7 @@ void hangman(char *dictionnary, char *difficulty)
     int gameWon = 0;
     int firstTurn = 0;
 
-    char **stringsFound = openAndReadCsv(difficulty, dictionnary);
+    char **stringsFound = openAndReadCsv(difficulty, dictionnary, category);
 
     char *wordToGuess = chooseWord(stringsFound);
 
@@ -196,6 +301,7 @@ void hangman(char *dictionnary, char *difficulty)
 
         if(fail == 0)
         {
+
             life--;
         }
         fail = 0;
@@ -204,12 +310,13 @@ void hangman(char *dictionnary, char *difficulty)
         if(gameWon == length(wordToGuess))
         {
             printf("Congratulations you've won your word was: %s\n", wordToFind);
-            gameStatus = replay(hangman, dictionnary, difficulty, gameStatus);
+            gameStatus = replay(hangman, dictionnary, difficulty, category, gameStatus);
         }
         if(life == 0)
         {
+            print_hangman(life);
             printf("Ho no you lost your word was %s\n", wordToGuess);
-            gameStatus = replay(hangman, dictionnary, difficulty, gameStatus);
+            gameStatus = replay(hangman, dictionnary, difficulty, category,gameStatus);
         }
         firstTurn++;
 
@@ -221,12 +328,16 @@ void hangman(char *dictionnary, char *difficulty)
 
 int main(int argc, char **argv)
 {
-    if(argc < 3)
-    {
-        exit(-1);
-    }
 
-    hangman(argv[1], argv[2]);
+    if(argc < 2)
+    {
+        argv[1] = NULL;
+        argv[2] = NULL;
+        argv[3] = NULL;
+    }
+    printf("Please make sure you're input is the same as this one: make run, optional command: \"dictionnary.csv <facile/moyen/difficile> category\"\n");
+
+    hangman(argv[1], argv[2], argv[3]);
 
     return 0;
 }
