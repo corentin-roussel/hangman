@@ -1,10 +1,17 @@
 #Fruits
 fraise,fruits,facile
 banane,fruits,facile
+kiwi,fruits,facile
+pomme,fruits,facile
 noix de coco,fruits,moyen
+cassis,fruits,moyen
+kumquat,fruits,moyen
+baie de goji,fruits,difficile
+carambole,fruits,difficile
 fruit du dragon,fruits,difficile
 #Langages
+prout,difficile
 html,langages,facile
 css,langages,wth?
-assembly,langag,difficile
 python,langages,moyen
+assembly,langages,difficile
