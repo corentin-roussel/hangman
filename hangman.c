@@ -32,7 +32,6 @@ int find_lines(char *inputFile)
     return lines;
 }
 
-
 char **openAndReadCsv(char *difficulty, char *fileName, char *category)
 {
     int rowCount = 0;
@@ -73,6 +72,7 @@ char **openAndReadCsv(char *difficulty, char *fileName, char *category)
                 continue;
             }
             printf("Error on row %d: %s\n", rowCount, row);
+            continue;
         }
         if (strchr(row, '#') != NULL) {
             continue;
@@ -129,7 +129,6 @@ char **openAndReadCsv(char *difficulty, char *fileName, char *category)
 
     return array;
 }
-
 
 void free_strings(char *string)
 {
@@ -212,7 +211,6 @@ void print_hangman(int index)
             printf("Error: switch case not met\n\n");
     }
 }
-
 
 void vider_buffer(void)
 {
@@ -305,24 +303,24 @@ char *wordTransformed(char *stringTochange, char *emptyString)
     return emptyString;
 }
 
-void clear_screen()
-{
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
+//void clear_screen()
+//{
+//#ifdef _WIN32
+//    system("cls");
+//#else
+//    system("clear");
+//#endif
+//
+//}
 
-}
-
-char askUser(int life, char *wordToFind, char buffer)
+char *askUser(int life, char *wordToFind, char *buffer, int wordLife)
 {
     print_hangman(life);
     printf("You have %d life\n", life);
+    printf("You have %d time to guess the right word\n", wordLife);
     printf("Word to find : %s\n", wordToFind);
     printf("Please enter a letter: ");
-    scanf("%c", &buffer);
-    vider_buffer();
+    scanf("%[^\n]%*c", buffer);
 
     return buffer;
 }
@@ -334,7 +332,7 @@ void hangman(char *dictionnary, char *difficulty, char *category)
 {
     int gameStatus = 1;
     int life = 6;
-    char buffer = '\0';
+    int wordLife = 3;
     int index = 0;
     int fail = 0;
     int firstTurn = 0;
@@ -343,6 +341,8 @@ void hangman(char *dictionnary, char *difficulty, char *category)
     char **stringsFound = openAndReadCsv(difficulty, dictionnary, category);
 
     char *wordToGuess = chooseWord(stringsFound);
+
+    char *buffer = malloc(sizeof(char) * length(wordToGuess));
 
     char *wordToFind = malloc( sizeof(char) * length(wordToGuess));
 
@@ -356,14 +356,18 @@ void hangman(char *dictionnary, char *difficulty, char *category)
             printf("%c, ", letterProposed[i]);
         }
         printf("\n");
-        buffer = askUser(life, wordToFind, buffer);
-        letterProposed[firstTurn] = buffer;
-        clear_screen();
+        buffer = askUser(life, wordToFind, buffer, wordLife);
+        if(length(buffer) == 2)
+        {
+            letterProposed[firstTurn] = buffer[0];
+            firstTurn++;
+        }
+        //clear_screen();
         while(wordToFind[index] != '\0')
         {
-            if(buffer == wordToGuess[index])
+            if(buffer[0] == wordToGuess[index])
             {
-                wordToFind[index] = buffer;
+                wordToFind[index] = buffer[0];
                 fail++;
             }
 
@@ -377,18 +381,29 @@ void hangman(char *dictionnary, char *difficulty, char *category)
         fail = 0;
         index = 0;
 
+
+        if(length(buffer) > 2)
+        {
+            if(my_strcmp(wordToGuess, buffer) == 0)
+            {
+                printf("Congratulations you've won your word was: %s\n", wordToGuess);
+                gameStatus = replay(hangman, dictionnary, difficulty, category, gameStatus);
+            }else
+            {
+                wordLife--;
+            }
+        }
         if(my_strcmp(wordToGuess, wordToFind) == 0)
         {
             printf("Congratulations you've won your word was: %s\n", wordToFind);
             gameStatus = replay(hangman, dictionnary, difficulty, category, gameStatus);
         }
-        if(life == 0)
+        if(life == 0 || wordLife == 0)
         {
             print_hangman(life);
             printf("Ho no you lost your word was %s\n", wordToGuess);
             gameStatus = replay(hangman, dictionnary, difficulty, category,gameStatus);
         }
-        firstTurn++;
     }
     free_strings(wordToFind);
 }

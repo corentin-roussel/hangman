@@ -4,3 +4,5 @@ build/
 hangman
 hangman.o
 hangman.exe
+SOS
+.idea/

@@ -1,5 +1,4 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -g
 SRCS = hangman.c
 TARGET = hangman
 OBJS = $(SRCS:.c=.o)
@@ -11,10 +10,19 @@ ifeq (run,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+LDFLAGS = -L libncurses
+ifeq ($(OS),Windows_NT)
+	LDFLAGS += -lncursesw
+else
+	LDFLAGS += -lncurses
+endif
+INCLUDES = -I ncurses
+CFLAGS = -Wall -Wextra -Werror -g $(INLCUDES)
+
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f $(OBJS)
