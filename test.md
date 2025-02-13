@@ -1,6 +1,6 @@
 # Idéation
 
-![image](/home/corentin/.config/i3/wallpaper.jpg)
+![file](dictionnary.csv)
 
 Go to [Google](https://google.com)
 
